@@ -8,9 +8,21 @@
 ?>
 <main role="main" class="container"><style>
 .wrapper { padding-top:30px; }
-</style>
+</style> 
 <div class="row justify-content-center wrapper">
 <div class="col-md-6">
+<?php
+if(!empty($_SESSION["success"])){
+	?>
+	<div class="alert alert-success text-center">
+		<?php  echo $_SESSION["success"];?>
+	
+	</div>
+<?php
+ //clear the erros for next submission
+ unset($_SESSION['success']);
+}
+?>
 <?php
 if(!empty($_SESSION['errors'])){
 	?>

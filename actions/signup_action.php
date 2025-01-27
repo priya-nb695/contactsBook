@@ -2,6 +2,8 @@
 ob_start();
 session_start();
 require_once "../includes/config.php";
+require_once "../includes/db.php";
+
 $errors=[];
 if(isset($_POST)){
   //print_arr($_POST);
@@ -36,10 +38,21 @@ if(isset($_POST)){
     header('location:'.SITEURL.'signup.php');
     exit();
   }
-  else{
-    echo "form Submission succesfull!"; die;
-  }
+ 
+//if no errors
+//creating pwd hash
+ $passwordHash=password_hash($password, PASSWORD_DEFAULT);
+ //proceding to add values to db
+ $sql = "INSERT INTO `users` (first_name, last_name, email, password) VALUES ('{$firstName}', '{$lastName}', '{$email}', '{$passwordHash}')";
 
+//connecting to db by using the function defined in db.php
+ $connection=db_connect();
+ if(mysqli_query($connection,$sql)){
+    db_close( $connection);
+    $message="you are regesterd successfully!";
+    $_SESSION["success"]=$message;
+    header("location:".SITEURL.'signup.php');
+ }
 
 }
 ?>
