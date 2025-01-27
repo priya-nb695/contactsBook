@@ -32,13 +32,32 @@ if(isset($_POST)){
   if(!empty($password) && !empty($confirmpassword) && $password!=$confirmpassword){
     $errors[]="Confirm Password did not match";
   }
-  if(!empty($errors)){
-    $_SESSION['errors']=$errors;
-    //sending back the erros and location to signup.php
-    header('location:'.SITEURL.'signup.php');
-    exit();
-  }
- 
+  
+ //to check if email is alredy registred
+ if(!empty($email)){
+  //conect db
+      $connection=db_connect();
+      //snaitize the email, to avode sql injection
+      $sanitizedEmail=mysqli_real_escape_string($connection,$email);
+      //create a query to get the macthed email row
+      $sqlQuery="SELECT id FROM `users` WHERE `email`='{$sanitizedEmail}'";
+      $sqlResult=mysqli_query($connection,$sqlQuery);
+      $emailRows=mysqli_num_rows($sqlResult);
+     // print_arr( $emailRows);
+      //check the number of rows with same email
+      if($emailRows>0){
+        $errors[]="Email Address already exists";
+      }
+      db_close($connection);
+
+
+ }
+ if(!empty($errors)){
+  $_SESSION['errors']=$errors;
+  //sending back the erros and location to signup.php
+  header('location:'.SITEURL.'signup.php');
+  exit();
+}
 //if no errors
 //creating pwd hash
  $passwordHash=password_hash($password, PASSWORD_DEFAULT);
