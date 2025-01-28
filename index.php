@@ -2,41 +2,34 @@
 <?php 
 //session alredy started on header
    include_once 'common/header.php';
-   //getting the erros from signup_action.php file
-//    if(isset($_SESSION['errors'])){
-//      print_arr($_SESSION['errors']);
-//    }
+   require_once "includes/db.php";
+   //if user logged in then do the action 
+   $userId = (!empty($_SESSION['user']) && !empty($_SESSION['user']['id'])) ? $_SESSION['user']['id'] : 0;
+
 ?>
-<body>
+<main role="main" class="container wrapper">
+<?php
+if(!empty($_SESSION["success"])){
+	?>
+	<div class="alert alert-success text-center">
+		<?php  echo $_SESSION["success"];?>
+	
+	</div>
+<?php
+ //clear the errors for next submission
+ unset($_SESSION['success']);
+}
+//get user contact 
+if(!empty($userId)){
+  //if id found we will fetch contacts
+  $contactsSql="SELECT * FROM `contacts` WHERE `owner_id`=$userId  ORDER BY first_name ASC LIMIT 0,10";
+  $connection=db_connect();
+  $contactResult=mysqli_query($connection,$contactsSql);
+  $contactNumRows=mysqli_num_rows($contactResult);
+  if( $contactNumRows>0){
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-<div class="container">
-  <!-- <a class="navbar-brand" href="/contactbook/"><i class="fa fa-address-book"></i> ContactBook</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <div class="collapse navbar-collapse" id="navbarNavDropdown">
-    <ul class="navbar-nav">
-      <li class="nav-item  active">
-        <a class="nav-link" href="/contactbook/">Home <span class="sr-only">(current)</span></a>
-      </li>
-            <li class="nav-item">
-        <a class="nav-link" href="/contactbook/addcontact.php">Add Contact</a>
-      </li> -->
-      <!-- <li class="nav-item dropdown ">
-        <a class="nav-link dropdown-toggle" href="/contactbook/profile.php" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        Pankaj        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-          <a class="dropdown-item" href="/contactbook/profile.php">Profile</a>
-          <a class="dropdown-item" href="/contactbook/logout.php">Logout</a>
-        </div>
-      </li> -->
-          </ul>
-  </div>
-  </div>
-</nav>
-<main role="main" class="container">
-
+  
+?>
 
 <table class="table text-center">
   <thead>
@@ -47,53 +40,31 @@
     </tr>
   </thead>
   <tbody>
+    <?php 
+    while($row=mysqli_fetch_assoc($contactResult)){
+
+    ?>
       <tr>
       <td class="align-middle"><img src="https://via.placeholder.com/50.png/09f/666" class="img-thumbnail img-list" /></td>
-      <td class="align-middle">Deepak Sharma</td>
+      <td class="align-middle"><?php  echo $row['first_name']." ".$row['last_name'];?></td>
       <td class="align-middle"> 
       <a href="/contactbook/view.php?id=9" class="btn btn-success">View</a>
       <a href="/contactbook/addcontact.php?id=9" class="btn btn-primary">Edit</a>
       <a href="/contactbook/delete.php?id=9" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
       </td>
     </tr>
-      <tr>
-      <td class="align-middle"><img src="/contactbook/uploads/photos/2f053caaa84024ec6d12aaa5679b5417.jpg" class="img-thumbnail img-list" /></td>
-      <td class="align-middle">Harish Rawat</td>
-      <td class="align-middle"> 
-      <a href="/contactbook/view.php?id=3" class="btn btn-success">View</a>
-      <a href="/contactbook/addcontact.php?id=3" class="btn btn-primary">Edit</a>
-      <a href="/contactbook/delete.php?id=3" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
-      </td>
-    </tr>
-      <tr>
-      <td class="align-middle"><img src="https://via.placeholder.com/50.png/09f/666" class="img-thumbnail img-list" /></td>
-      <td class="align-middle">john smith</td>
-      <td class="align-middle"> 
-      <a href="/contactbook/view.php?id=1" class="btn btn-success">View</a>
-      <a href="/contactbook/addcontact.php?id=1" class="btn btn-primary">Edit</a>
-      <a href="/contactbook/delete.php?id=1" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
-      </td>
-    </tr>
-      <tr>
-      <td class="align-middle"><img src="/contactbook/uploads/photos/c266048c47fa99a363727728897ead4c.jpg" class="img-thumbnail img-list" /></td>
-      <td class="align-middle">MS2 Dhoni</td>
-      <td class="align-middle"> 
-      <a href="/contactbook/view.php?id=8" class="btn btn-success">View</a>
-      <a href="/contactbook/addcontact.php?id=8" class="btn btn-primary">Edit</a>
-      <a href="/contactbook/delete.php?id=8" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
-      </td>
-    </tr>
-      <tr>
-      <td class="align-middle"><img src="https://via.placeholder.com/50.png/09f/666" class="img-thumbnail img-list" /></td>
-      <td class="align-middle">pawan singh</td>
-      <td class="align-middle"> 
-      <a href="/contactbook/view.php?id=2" class="btn btn-success">View</a>
-      <a href="/contactbook/addcontact.php?id=2" class="btn btn-primary">Edit</a>
-      <a href="/contactbook/delete.php?id=2" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
-      </td>
-    </tr>
+      
+     
+    <?php 
+    }
+    ?>
     </tbody>
 </table>
+<?php 
+}
+}
+?>
+
 
 <nav>
   <ul class="pagination justify-content-center">

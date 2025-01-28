@@ -59,5 +59,3 @@ if(!empty($_SESSION['errors'])){
 <?php 
    include_once 'common/footer.php';
 ?>
-</body>
-</html>
