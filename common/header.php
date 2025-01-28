@@ -19,7 +19,7 @@ $user=!empty($_SESSION['user'])? $_SESSION['user']:[];
 <!-- CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-<link rel="stylesheet" href="<?php echo SITEURL; ?>public/css/style.css">
+<link rel="stylesheet" href="<?php echo SITEURL."public/css/style.css" ?>">
 </head>
 <body>
 
@@ -34,15 +34,27 @@ $user=!empty($_SESSION['user'])? $_SESSION['user']:[];
       <li class="nav-item ">
         <a class="nav-link" href="<?php echo SITEURL ?>">Home <span class="sr-only">(current)</span></a>
       </li>
-            <li class="nav-item"  active>
-        <a class="nav-link" href="<?php echo SITEURL."signup.php"?>">Signup</a>
-      </li>
-      <li class="nav-item" >
-        <a class="nav-link" href="<?php echo SITEURL."login.php"?>">Login</a>
-      </li>
+       <?php
+            //if user not active then display signup and signin
+          if(empty($user) ){
+      ?>
+          <li class="nav-item"  active>
+           <a class="nav-link" href="<?php echo SITEURL."signup.php"?>">Signup</a>
+          </li>
+          <li class="nav-item" >
+            <a class="nav-link" href="<?php echo SITEURL."login.php"?>">Login</a>
+          </li>   
+     <?php  
+     }
+       ?>
+   
       <?php
+        //if user  active then display user name and progile logout 
        if(!empty($user) ){
       ?>
+      <li class="nav-item"  >
+           <a class="nav-link" href="<?php echo SITEURL."addcontact.php"?>">Add Contact</a>
+          </li>
            <li class="nav-item dropdown ">
            <a class="nav-link dropdown-toggle" href="/contactbook/profile.php" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <?php echo !empty($user['first_name'] ) ? $user['first_name'] : 'Guest' ?>
