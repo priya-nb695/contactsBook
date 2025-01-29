@@ -8,6 +8,7 @@
 //  }
 //get the active user if not empty
 $user=!empty($_SESSION['user'])? $_SESSION['user']:[];
+$currentPage=!empty($_SERVER['REQUEST_URI'])? $_SERVER['REQUEST_URI']:'';
 ?>
 
 <!DOCTYPE html>
@@ -31,17 +32,17 @@ $user=!empty($_SESSION['user'])? $_SESSION['user']:[];
   </button>
   <div class="collapse navbar-collapse" id="navbarNavDropdown">
     <ul class="navbar-nav">
-      <li class="nav-item ">
+      <li class="nav-item <?php  if($currentPage==SITEURL) echo "active"?> ">
         <a class="nav-link" href="<?php echo SITEURL ?>">Home <span class="sr-only">(current)</span></a>
       </li>
        <?php
             //if user not active then display signup and signin
           if(empty($user) ){
       ?>
-          <li class="nav-item"  active>
+          <li class="nav-item  <?php  if($currentPage==SITEURL."signup.php") {echo "active";}?>">
            <a class="nav-link" href="<?php echo SITEURL."signup.php"?>">Signup</a>
           </li>
-          <li class="nav-item" >
+          <li class="nav-item  <?php  if($currentPage==SITEURL."login.php") echo "active"?>">
             <a class="nav-link" href="<?php echo SITEURL."login.php"?>">Login</a>
           </li>   
      <?php  
@@ -52,7 +53,7 @@ $user=!empty($_SESSION['user'])? $_SESSION['user']:[];
         //if user  active then display user name and progile logout 
        if(!empty($user) ){
       ?>
-      <li class="nav-item"  >
+      <li class="nav-item  <?php  if($currentPage==SITEURL."addcontact.php") echo "active"?>" >
            <a class="nav-link" href="<?php echo SITEURL."addcontact.php"?>">Add Contact</a>
           </li>
            <li class="nav-item dropdown ">
