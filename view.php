@@ -25,7 +25,7 @@
         echo "Record doesnt Exist";
         exit();
       }
-
+      db_close($connection);
     }
     else{
       echo "Invalid  Contact Id";

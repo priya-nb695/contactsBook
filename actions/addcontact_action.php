@@ -13,6 +13,7 @@ if (isset($_POST) && !empty($_SESSION['user'])) {
     $phone = trim($_POST["phone"]);
     $address = trim($_POST["address"]);
     $photofile = !empty($_FILES["photo"]) ? $_FILES["photo"] : [];
+    $cId = !empty($_POST['cid']) ? $_POST['cid'] : '';
 
     // Validations
     if (empty($firstName)) {
@@ -77,16 +78,48 @@ if (isset($_POST) && !empty($_SESSION['user'])) {
         exit;
     }
 
-    // Inserting into the database
+    // Get owner ID from session
     $ownerId = (!empty($_SESSION['user']) && !empty($_SESSION['user']['id'])) ? $_SESSION['user']['id'] : 0;
-    $sql = "INSERT INTO `contacts` (first_name, last_name, email, phone, address, photo, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
     $connection = db_connect();
-    //using prepare statements to avoide sql attacks
-    $stmt = $connection->prepare($sql);
-    $stmt->bind_param("ssssssi", $firstName, $lastName, $email, $phone, $address, $photoName, $ownerId);
 
+    // **UPDATE EXISTING RECORD**
+    if (!empty($cId)) {
+        if (!empty($photoName)) {
+            // If a new photo is selected
+            $sql = "UPDATE `contacts` 
+                    SET first_name = ?, last_name = ?, email = ?, phone = ?, address = ?, photo = ? 
+                    WHERE id = ? AND owner_id = ?";
+
+            $stmt = $connection->prepare($sql);
+            $stmt->bind_param("ssssssii", $firstName, $lastName, $email, $phone, $address, $photoName, $cId, $ownerId);
+        } else {
+            // If no new photo is selected
+            $sql = "UPDATE `contacts` 
+                    SET first_name = ?, last_name = ?, email = ?, phone = ?, address = ? 
+                    WHERE id = ? AND owner_id = ?";
+
+            $stmt = $connection->prepare($sql);
+            $stmt->bind_param("ssssssi", $firstName, $lastName, $email, $phone, $address, $cId, $ownerId);
+        }
+
+        if ($stmt->execute()) {
+            $message = "Contact has been edited successfully";
+        } else {
+            echo "Error: " . $stmt->error;
+        }
+    } 
+    // **INSERT NEW RECORD**
+    else {
+        $sql = "INSERT INTO `contacts` (first_name, last_name, email, phone, address, photo, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = $connection->prepare($sql);
+        $stmt->bind_param("ssssssi", $firstName, $lastName, $email, $phone, $address, $photoName, $ownerId);
+        $message = "New Contact has been added successfully";
+    }
+
+    // Execute query and redirect
     if ($stmt->execute()) {
-        $_SESSION['success'] = "New Contact has been added successfully";
+        $_SESSION['success'] = $message;
         db_close($connection);
         header("location:" . SITEURL);
         exit;
