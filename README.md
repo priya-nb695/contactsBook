@@ -33,24 +33,38 @@ MySQL configured
 Setup
 
 1.Clone the repository:
-git clone https://github.com/priya-nb695/contactsBook/.git
+
+git clone https://github.com/priya-nb695/contactsBook.git
+
 cd contactsBook
+
 Set up the database:
+
 2.Create a database in MySQL
+
 CREATE DATABASE contactsbook;
+
 Switch to the database:
+
 USE contactsbook;
+
 Create the users table:
+
 CREATE TABLE users (
+
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     profile_img VARCHAR(255),
     password VARCHAR(255) NOT NULL
+
 );
+
 Create the contacts table:
+
 CREATE TABLE contacts (
+
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
@@ -61,7 +75,9 @@ CREATE TABLE contacts (
     status ENUM('active', 'inactive') NOT NULL,
     owner_id INT,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+
 );
+
 3.Start the server:
 
 If using XAMPP, place the project in the htdocs folder and start Apache & MySQL
