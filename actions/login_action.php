@@ -3,74 +3,75 @@ ob_start();
 session_start();
 require_once "../includes/config.php";
 require_once "../includes/db.php";
-$errors=[];
+$errors = [];
 
-if(isset($_POST)) {
-    // print_arr($_POST);
-    $email=trim($_POST['email']);
-    $password=trim($_POST['password']);
-}
-//validtaions
-if(empty($email)){
-    $errors[]="Email cannot be blank";
-  }
-  if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)){
-    $errors[]="Invalid Email address";
-  }
-  if(empty($password)){
-    $errors[]="Password cannot be blank";
-  }
-  if(!empty($errors)){
-    $_SESSION['errors']=$errors;
-    header('location:'.SITEURL."login.php");
-  }
-  //if no errors
-  if(!empty($email) && !empty($password) ){
-    $connection=db_connect();
-    //sanitize the email, to avoide sql injection
-    $sanitizedEmail=mysqli_real_escape_string($connection,$email);
-    $sql="SELECT * FROM `users` WHERE `email`='{$sanitizedEmail}'";
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Trim and sanitize input
+    $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
+    $password = trim($_POST['password']);
 
-    $sqlResult=mysqli_query($connection,$sql);
-    if(mysqli_num_rows($sqlResult) > 0){
-        $userInfo=mysqli_fetch_assoc($sqlResult);
-            // print_arr($userInfo);
-            if(!empty($userInfo)){
-                $userpwd=$userInfo["password"];
-                if(password_verify($password,$userpwd)){
-                    //if condition pass, the user is verified
-                    //can be stored the details in session so it can be used in other page
-                    //but we cannot store the password in session so first we need to unset the password
-                    unset($userInfo["password"]);
-                    $_SESSION["user"]=$userInfo;
-                    $request_url=!empty($_SESSION['request_url'])? $_SESSION['request_url']:SITEURL;
-                    unset($_SESSION['request_url']);
-                    echo   $request_url;
-                   // print_arr(  $_SESSION["user"]);
-                   //sending the user to respective page if no request url then it will go to homepage
-                   header("location:". $request_url);
+    // Validations
+    if (empty($email)) {
+        $errors[] = "Email cannot be blank";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid Email address";
+    }
 
-                }
-                else{
-                  $errors[]="Incorrect password";
-                  $_SESSION['errors']=$errors;
-                  //sending user again to login page
-                  header("location:".SITEURL."login.php");
-                  exit();
-                }
+    if (empty($password)) {
+        $errors[] = "Password cannot be blank";
+    }
 
+    // If there are validation errors, redirect back with errors
+    if (!empty($errors)) {
+        $_SESSION['errors'] = $errors;
+        header("Location: " . SITEURL . "login.php");
+        exit();
+    }
+
+    // If no errors, proceed with database check
+    $connection = db_connect();
+    $sanitizedEmail = mysqli_real_escape_string($connection, $email);
+
+    // Query the user based on email
+    $sql = "SELECT * FROM `users` WHERE `email` = ?";
+    $stmt = mysqli_prepare($connection, $sql);
+    
+    if ($stmt) {
+        // Bind parameters and execute the query
+        mysqli_stmt_bind_param($stmt, "s", $sanitizedEmail);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+
+        if (mysqli_num_rows($result) > 0) {
+            $userInfo = mysqli_fetch_assoc($result);
+
+            // Verify password
+            if (password_verify($password, $userInfo["password"])) {
+                // Remove password before storing user info in session
+                unset($userInfo["password"]);
+                $_SESSION["user"] = $userInfo;
+
+                // Redirect user to intended page or homepage
+                $request_url = !empty($_SESSION['request_url']) ? $_SESSION['request_url'] : SITEURL;
+                unset($_SESSION['request_url']);
+
+                header("Location: " . $request_url);
+                exit();
+            } else {
+                $errors[] = "Incorrect password";
             }
+        } else {
+            $errors[] = "Email address doesn't exist";
+        }
         
-    }
-    else{
-      $errors[]="Email address doesn't exsist";
-      $_SESSION['errors']=$errors;
-      //sending user again to login page
-      header("location:".SITEURL."login.php");
-      exit();
+        mysqli_stmt_close($stmt);
+    } else {
+        $errors[] = "Database error. Please try again later.";
     }
 
-
-    print_arr($sqlResult);
-  }
+    // If errors occur, redirect back with error messages
+    $_SESSION['errors'] = $errors;
+    header("Location: " . SITEURL . "login.php");
+    exit();
+}
 ?>

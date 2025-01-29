@@ -4,116 +4,136 @@ session_start();
 require_once "../includes/config.php";
 require_once "../includes/db.php";
 
-$errors=[];
-if(isset($_POST)){
-  //print_arr($_POST);
-  $firstName=trim($_POST["fname"]);
-  $lastName=trim($_POST["lname"]);
-  $email=trim($_POST["email"]);
-  $photofile = !empty($_FILES["photo"]) ? $_FILES["photo"] : [];
+// Initialize errors array
+$errors = [];
 
- // validations
-  if(empty($firstName)){
-    $errors[]="First Name cannot be blank";
-  }
-  if(empty($email)){
-    $errors[]="Email cannot be blank";
-  }
-  if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)){
-    $errors[]="Invalid Email address";
-  }
- // If there are errors, redirect back
- if (!empty($errors)) {
-    $_SESSION['errors'] = $errors;
-    header("location:" . SITEURL . "edit_profile.php");
-    exit();
+// Check if form is submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Sanitize and trim input
+    $firstName = sanitizeInput($_POST["fname"]);
+    $lastName = sanitizeInput($_POST["lname"]);
+    $email = sanitizeInput($_POST["email"]);
+    $photofile = !empty($_FILES["photo"]) ? $_FILES["photo"] : [];
+
+    // Validate inputs
+    if (empty($firstName)) {
+        $errors[] = "First Name cannot be blank";
+    }
+
+    if (empty($email)) {
+        $errors[] = "Email cannot be blank";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid Email address";
+    }
+
+    // If there are errors, redirect back to edit profile page
+    if (!empty($errors)) {
+        $_SESSION['errors'] = $errors;
+        header("Location: " . SITEURL . "edit_profile.php");
+        exit();
+    }
+
+    // Check if the email is already registered
+    if (isEmailExists($email)) {
+        $errors[] = "Email Address already exists";
+        $_SESSION['errors'] = $errors;
+        header("Location: " . SITEURL . "edit_profile.php");
+        exit();
+    }
+
+    // Handle photo upload
+    $photoName = handlePhotoUpload($photofile, $errors);
+
+    // Get the user ID from the session
+    $userId = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : 0;
+
+    if ($userId > 0) {
+        $connection = db_connect();
+        
+        // Prepare SQL query for updating user profile
+        $sql = "UPDATE `users` SET first_name='{$firstName}', last_name='{$lastName}', email='{$email}'";
+        if ($photoName) {
+            $sql .= ", profile_img='{$photoName}'";
+        }
+        $sql .= " WHERE id={$userId}";
+
+        // Execute the query and handle success/failure
+        if (mysqli_query($connection, $sql)) {
+            $_SESSION['success'] = "Profile has been updated successfully.";
+            db_close($connection);
+            header('Location: ' . SITEURL . "profile.php");
+            exit();
+        } else {
+            $errors[] = "An error occurred while updating the profile. Please try again.";
+            $_SESSION['errors'] = $errors;
+            db_close($connection);
+            header('Location: ' . SITEURL . "edit_profile.php");
+            exit();
+        }
+    } else {
+        $errors[] = "User not authenticated.";
+        $_SESSION['errors'] = $errors;
+        header('Location: ' . SITEURL . "login.php");
+        exit();
+    }
 }
-  
- //to check if email is alredy registred
-//  if(!empty($email)){
-//   //conect db
-//       $connection=db_connect();
-//       //snaitize the email, to avode sql injection
-//       $sanitizedEmail=mysqli_real_escape_string($connection,$email);
-//       //create a query to get the macthed email row
-//       $sqlQuery="SELECT id FROM `users` WHERE `email`='{$sanitizedEmail}'";
-//       $sqlResult=mysqli_query($connection,$sqlQuery);
-//       $emailRows=mysqli_num_rows($sqlResult);
-//      // print_arr( $emailRows);
-//       //check the number of rows with same email
-//       if($emailRows>0){
-//         $errors[]="Email Address already exists";
-//       }
-//       db_close($connection);
 
-
-//  }
- if(!empty($errors)){
-  $_SESSION['errors']=$errors;
-  //sending back the erros and location to signup.php
-  header('location:'.SITEURL.'signup.php');
-  exit();
+/**
+ * Sanitize user input to prevent SQL injection
+ */
+function sanitizeInput($input) {
+    global $connection; // Make sure $connection is defined globally
+    return mysqli_real_escape_string($connection, trim($input));
 }
-//if no errors
 
- //proceding to add values to db
-//  $sql = "INSERT INTO `users` (first_name, last_name, email) VALUES ('{$firstName}', '{$lastName}', '{$email}')";
-
-// //connecting to db by using the function defined in db.php
-//  $connection=db_connect();
-//  if(mysqli_query($connection,$sql)){
-//     db_close( $connection);
-//     $message="you are regesterd successfully!";
-//     $_SESSION["success"]=$message;
-//     header("location:".SITEURL.'signup.php');
-//  }
-  // Uploading user photo
-  $photoName = '';
-  if (!empty($photofile['name'])) {
-      $tempFilePath = $photofile['tmp_name'];
-      $filename = $photofile['name'];
-      $filenameCmp = explode('.', $filename);
-      $fileExtension = strtolower(end($filenameCmp));
-      $filenewName = md5(time() . $filename) . "." . $fileExtension;
-      $photoName = $filenewName;
-
-      // Allowed extensions
-      $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
-      $allowed_mimes = ['image/jpeg', 'image/png', 'image/gif'];
-
-      if (in_array($fileExtension, $allowed_extensions) && in_array($photofile['type'], $allowed_mimes)) {
-          $uploadFileDir = "../uploads/profilephotos/";
-          $destinationPath = $uploadFileDir . $photoName;
-
-          if (!move_uploaded_file($tempFilePath, $destinationPath)) {
-              $errors[] = "File couldn't be uploaded";
-          }
-      } else {
-          $errors[] = "Invalid photo (file) type or extension";
-      }
-  }
-
-    // Get owner ID from session
-    $userId = (!empty($_SESSION['user']) && !empty($_SESSION['user']['id'])) ? $_SESSION['user']['id'] :0;
-   echo $userId;
+/**
+ * Check if email already exists in the database
+ */
+function isEmailExists($email) {
     $connection = db_connect();
-    if(!empty($userId)){
-    if(!empty($photoName)){
-        //echo $firstName;
-        $sql=" UPDATE `users` SET first_name='{$firstName}',last_name='{$lastName}',email='{$email}',profile_img='{$photoName}'
-        WHERE id={$userId}";
+    $sanitizedEmail = sanitizeInput($email);
+    $sqlQuery = "SELECT id FROM `users` WHERE `email` = '{$sanitizedEmail}'";
+    $sqlResult = mysqli_query($connection, $sqlQuery);
+    $emailRows = mysqli_num_rows($sqlResult);
+    db_close($connection);
+    return $emailRows > 0;
+}
+
+/**
+ * Handle photo upload and return the new file name
+ */
+function handlePhotoUpload($file, &$errors) {
+    $photoName = '';
+    if (!empty($file['name'])) {
+        $tempFilePath = $file['tmp_name'];
+        $filename = $file['name'];
+        $filenameCmp = explode('.', $filename);
+        $fileExtension = strtolower(end($filenameCmp));
+        $newFileName = md5(time() . $filename) . "." . $fileExtension;
+        $photoName = $newFileName;
+
+        // Allowed extensions and MIME types
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        $allowed_mimes = ['image/jpeg', 'image/png', 'image/gif'];
+
+        // Validate file extension and MIME type
+        if (in_array($fileExtension, $allowed_extensions) && in_array($file['type'], $allowed_mimes)) {
+            // Check file size (max 5MB)
+            if ($file['size'] > 5000000) {
+                $errors[] = "File size exceeds the maximum limit of 5MB";
+            } else {
+                $uploadDir = "../uploads/profilephotos/";
+                $destinationPath = $uploadDir . $photoName;
+
+                // Move the uploaded file
+                if (!move_uploaded_file($tempFilePath, $destinationPath)) {
+                    $errors[] = "File couldn't be uploaded";
+                }
+            }
+        } else {
+            $errors[] = "Invalid photo (file) type or extension";
+        }
     }
-    else{
-       
-        $sql=" UPDATE `users` SET first_name='{$firstName}',last_name='{$lastName}',email='{$email}'
-        WHERE id={$userId}";
-    }
- 
-    if(mysqli_query($connection,$sql)){
-        $_SESSION['success']="Profile has been updated successfully.";
-        db_close($connection);
-        header('location:'.SITEURL."profile.php");
-    }
-    }
+    return $photoName;
 }
 ?>

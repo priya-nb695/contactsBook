@@ -4,74 +4,97 @@ session_start();
 require_once "../includes/config.php";
 require_once "../includes/db.php";
 
-$errors=[];
-if(isset($_POST)){
-  //print_arr($_POST);
-  $firstName=trim($_POST["fname"]);
-  $lastName=trim($_POST["lname"]);
-  $email=trim($_POST["email"]);
-  $password=trim($_POST["password"]);
-  $confirmpassword=trim($_POST["cpassword"]);
+$errors = [];
 
-  //validations
-  if(empty($firstName)){
-    $errors[]="First Name cannot be blank";
-  }
-  if(empty($email)){
-    $errors[]="Email cannot be blank";
-  }
-  if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)){
-    $errors[]="Invalid Email address";
-  }
-  if(empty($password)){
-    $errors[]="Password cannot be blank";
-  }
-  if(empty($confirmpassword)  ){
-    $errors[]="Confirm password cannot be blank";
-  }
-  if(!empty($password) && !empty($confirmpassword) && $password!=$confirmpassword){
-    $errors[]="Confirm Password did not match";
-  }
-  
- //to check if email is alredy registred
- if(!empty($email)){
-  //conect db
-      $connection=db_connect();
-      //snaitize the email, to avode sql injection
-      $sanitizedEmail=mysqli_real_escape_string($connection,$email);
-      //create a query to get the macthed email row
-      $sqlQuery="SELECT id FROM `users` WHERE `email`='{$sanitizedEmail}'";
-      $sqlResult=mysqli_query($connection,$sqlQuery);
-      $emailRows=mysqli_num_rows($sqlResult);
-     // print_arr( $emailRows);
-      //check the number of rows with same email
-      if($emailRows>0){
-        $errors[]="Email Address already exists";
-      }
-      db_close($connection);
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Trim and sanitize input
+    $firstName = trim($_POST["fname"]);
+    $lastName = trim($_POST["lname"]);
+    $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
+    $password = trim($_POST["password"]);
+    $confirmPassword = trim($_POST["cpassword"]);
 
+    // Validations
+    if (empty($firstName)) {
+        $errors[] = "First Name cannot be blank";
+    }
+    if (empty($email)) {
+        $errors[] = "Email cannot be blank";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid Email address";
+    }
+    if (empty($password)) {
+        $errors[] = "Password cannot be blank";
+    }
+    if (empty($confirmPassword)) {
+        $errors[] = "Confirm password cannot be blank";
+    }
+    if (!empty($password) && $password !== $confirmPassword) {
+        $errors[] = "Confirm Password did not match";
+    }
 
- }
- if(!empty($errors)){
-  $_SESSION['errors']=$errors;
-  //sending back the erros and location to signup.php
-  header('location:'.SITEURL.'signup.php');
-  exit();
+    // Check if email is already registered
+    if (empty($errors)) {
+        $connection = db_connect();
+
+        // Use prepared statement to prevent SQL injection
+        $sqlQuery = "SELECT id FROM users WHERE email = ?";
+        $stmt = mysqli_prepare($connection, $sqlQuery);
+
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "s", $email);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_store_result($stmt);
+
+            if (mysqli_stmt_num_rows($stmt) > 0) {
+                $errors[] = "Email Address already exists";
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            $errors[] = "Database error. Please try again later.";
+        }
+
+        db_close($connection);
+    }
+
+    // If errors exist, redirect back with errors
+    if (!empty($errors)) {
+        $_SESSION['errors'] = $errors;
+        header("Location: " . SITEURL . "signup.php");
+        exit();
+    }
+
+    // If no errors, proceed with user registration
+    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+    $connection = db_connect();
+
+    $sql = "INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)";
+    $stmt = mysqli_prepare($connection, $sql);
+
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "ssss", $firstName, $lastName, $email, $passwordHash);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            db_close($connection);
+            $_SESSION["success"] = "You are registered successfully!";
+            header("Location: " . SITEURL . "signup.php");
+            exit();
+        } else {
+            $errors[] = "Registration failed. Please try again.";
+        }
+
+        mysqli_stmt_close($stmt);
+    } else {
+        $errors[] = "Database error. Please try again later.";
+    }
+
+    db_close($connection);
 }
-//if no errors
-//creating pwd hash
- $passwordHash=password_hash($password, PASSWORD_DEFAULT);
- //proceding to add values to db
- $sql = "INSERT INTO `users` (first_name, last_name, email, password) VALUES ('{$firstName}', '{$lastName}', '{$email}', '{$passwordHash}')";
 
-//connecting to db by using the function defined in db.php
- $connection=db_connect();
- if(mysqli_query($connection,$sql)){
-    db_close( $connection);
-    $message="you are regesterd successfully!";
-    $_SESSION["success"]=$message;
-    header("location:".SITEURL.'signup.php');
- }
-
+// If errors exist, redirect back with errors
+if (!empty($errors)) {
+    $_SESSION['errors'] = $errors;
+    header("Location: " . SITEURL . "signup.php");
+    exit();
 }
 ?>
