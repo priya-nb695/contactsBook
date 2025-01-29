@@ -76,8 +76,26 @@ if(!empty($userId)){
 </table>
 <?php 
 getpagination($countRows,$currentPage);
+?>
+<?php
+}
+else{
+  echo '<div class="alert alert-danger text-center">No Contacts available</div>';
 }
 }
+else{
+  ?>
+
+  <Style>
+    body{
+      background-image:url("<?php echo SITEURL."public/images/contactbook.jpg"; ?>");
+      background-repeat:no-repeat;
+      background-size:cover;
+    }
+  </Style>
+  <?php
+}
+
 ?>
 
 </main>
