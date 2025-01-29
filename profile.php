@@ -2,16 +2,19 @@
 //session alredy started on header
    include_once 'common/header.php';
    include_once 'includes/db.php';
-   //check if user user active if not send back to login
-  //  if(empty($_SESSION['user'])){
-  //    header("location:".SITEURL."login.php");
-  //    exit();//it will terminate the current script 
-  //  }
-   //when user is loginned in
+
+   //when user is not  loginned in
+  
+   if(empty($_SESSION['user'])) {
+    $currentPage=!empty($_SERVER['REQUEST_URI'])? $_SERVER['REQUEST_URI']:'';
+    $_SESSION['request_url']= $currentPage;
+     //check if user not  active if not send back to login
+    header("location:".SITEURL."login.php");
+    exit();
+   }
+    //when user is loginned in
    $userId=$_SESSION['user']['id'];
-   //print_arr($_SESSION['user']);
-  //  $userName=$_SESSION['user']['first_name'];
-  //  $userEmail=$_SESSION['user']['email'];
+
   $connection=db_connect();
   $sql="SELECT * FROM `users` WHERE `id` =$userId";
   $sqlResult=mysqli_query($connection,$sql);
@@ -21,6 +24,7 @@
   else{
     echo "User not found.";
   }
+  db_close($connection);
 ?>
 
 <main role="main" class="container"><div class="row justify-content-center wrapper">
@@ -33,7 +37,8 @@
 <div class="container" id="profile"> 
         <div class="row">
             <div class="col-sm-6 col-md-4">
-                <img src="http://placehold.it/100x100" alt="" class="rounded-circle" />
+                <img src="<?php
+     $userImage=!empty( $userInfo['profile_img'])? SITEURL."uploads/profilephotos/".$row['profile_img']:"https://via.placeholder.com/50.png/09f/666";?>" alt="" class="rounded-circle" />
             </div>
             <div class="col-sm-6 col-md-8">
                 <h4 class="text-primary">

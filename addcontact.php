@@ -6,10 +6,13 @@
 //    if(isset($_SESSION['errors'])){
 //      print_arr($_SESSION['errors']);
 //    }
-if(empty($_SESSION['user'])){
+
+   if(empty($_SESSION['user'])) {
+    $currentPage=!empty($_SERVER['REQUEST_URI'])? $_SERVER['REQUEST_URI']:'';
+    $_SESSION['request_url']= $currentPage;
+     //check if user not  active if not send back to login
     header("location:".SITEURL."login.php");
     exit();
-
    }
    $userId = (!empty($_SESSION['user']) && !empty($_SESSION['user']['id'])) ? $_SESSION['user']['id'] : 0;
     //get the contact id

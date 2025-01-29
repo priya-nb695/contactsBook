@@ -57,11 +57,13 @@ $currentPage=!empty($_SERVER['REQUEST_URI'])? $_SERVER['REQUEST_URI']:'';
            <a class="nav-link" href="<?php echo SITEURL."addcontact.php"?>">Add Contact</a>
           </li>
            <li class="nav-item dropdown ">
-           <a class="nav-link dropdown-toggle" href="/contactbook/profile.php" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+           <a class="nav-link dropdown-toggle"  href="<?php echo SITEURL."profile.php"?>" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <?php echo !empty($user['first_name'] ) ? $user['first_name'] : 'Guest' ?>
           </a>
            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
              <a class="dropdown-item" href="<?php echo SITEURL."profile.php"?>">Profile</a>
+             <a class="dropdown-item" href="<?php echo SITEURL."edit_profile.php"?>">Edit Profile</a>
+             <a class="dropdown-item" href="<?php echo SITEURL."change_password.php"?>">Change_Password</a>
              <a class="dropdown-item" href="<?php echo SITEURL."logout.php"?>">Logout</a>
            </div>
          </li>

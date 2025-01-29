@@ -43,9 +43,12 @@ if(empty($email)){
                     //but we cannot store the password in session so first we need to unset the password
                     unset($userInfo["password"]);
                     $_SESSION["user"]=$userInfo;
+                    $request_url=!empty($_SESSION['request_url'])? $_SESSION['request_url']:SITEURL;
+                    unset($_SESSION['request_url']);
+                    echo   $request_url;
                    // print_arr(  $_SESSION["user"]);
-                   //sending the session info to home page
-                   header("location:".SITEURL);
+                   //sending the user to respective page if no request url then it will go to homepage
+                   header("location:". $request_url);
 
                 }
                 else{
