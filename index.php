@@ -21,11 +21,23 @@ if(!empty($_SESSION["success"])){
 }
 //get user contact 
 if(!empty($userId)){
+  //get the current page value form get['page']
+  $currentPage=!empty($_GET['page'])?$_GET['page']:1;
+ //limit will be 5
+  $limit=5;
+   //when page 1 ->(1-1)*5=0;
+    //when page 2 ->(2-1)*5=5;
+    //to get the table limit from db
+  $offset=($currentPage-1)*$limit;
   //if id found we will fetch contacts
-  $contactsSql="SELECT * FROM `contacts` WHERE `owner_id`=$userId  ORDER BY first_name ASC LIMIT 0,10";
+  $contactsSql="SELECT * FROM `contacts` WHERE `owner_id`=$userId  ORDER BY first_name ASC LIMIT {$offset},{$limit}";
   $connection=db_connect();
   $contactResult=mysqli_query($connection,$contactsSql);
   $contactNumRows=mysqli_num_rows($contactResult);
+
+  $countSql="SELECT id FROM `contacts` WHERE `owner_id`=$userId";
+  $countResult=mysqli_query($connection,$countSql);
+  $countRows=mysqli_num_rows($countResult);
   if( $contactNumRows>0){
 
   
@@ -43,9 +55,11 @@ if(!empty($userId)){
     <?php 
     while($row=mysqli_fetch_assoc($contactResult)){
 
+     //getting user image
+     $userImage=!empty( $row['photo'])? SITEURL."uploads/photos/".$row['photo']:"https://via.placeholder.com/50.png/09f/666";
     ?>
       <tr>
-      <td class="align-middle"><img src="https://via.placeholder.com/50.png/09f/666" class="img-thumbnail img-list" /></td>
+      <td class="align-middle"><img src="<?php echo $userImage?>" class="img-thumbnail imgList" style="width: 60px;"/></td>
       <td class="align-middle"><?php  echo $row['first_name']." ".$row['last_name'];?></td>
       <td class="align-middle"> 
       <a href="/contactbook/view.php?id=9" class="btn btn-success">View</a>
@@ -61,24 +75,11 @@ if(!empty($userId)){
     </tbody>
 </table>
 <?php 
+getpagination($countRows,$currentPage);
 }
 }
 ?>
 
-
-<nav>
-  <ul class="pagination justify-content-center">
-      <li class="page-item  disabled">
-      <a class="page-link" href="/contactbook/index.php?page=0" >Previous</a>
-    </li>
-        <li class="page-item active"><a class="page-link" href="/contactbook/index.php?page=1">1</a></li>
-        <li class="page-item"><a class="page-link" href="/contactbook/index.php?page=2">2</a></li>
-    
-    <li class="page-item">
-      <a class="page-link" href="/contactbook/index.php?page=2">Next</a>
-    </li>
-  </ul>
-</nav>
 </main>
 <?php 
    include_once 'common/footer.php';
