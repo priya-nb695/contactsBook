@@ -12,17 +12,22 @@ if(isset($_POST)){
   $email=trim($_POST["email"]);
   $photofile = !empty($_FILES["photo"]) ? $_FILES["photo"] : [];
 
-  //validations
-  // if(empty($firstName)){
-  //   $errors[]="First Name cannot be blank";
-  // }
-  // if(empty($email)){
-  //   $errors[]="Email cannot be blank";
-  // }
-  // if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)){
-  //   $errors[]="Invalid Email address";
-  // }
- 
+ // validations
+  if(empty($firstName)){
+    $errors[]="First Name cannot be blank";
+  }
+  if(empty($email)){
+    $errors[]="Email cannot be blank";
+  }
+  if(!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)){
+    $errors[]="Invalid Email address";
+  }
+ // If there are errors, redirect back
+ if (!empty($errors)) {
+    $_SESSION['errors'] = $errors;
+    header("location:" . SITEURL . "edit_profile.php");
+    exit();
+}
   
  //to check if email is alredy registred
 //  if(!empty($email)){
