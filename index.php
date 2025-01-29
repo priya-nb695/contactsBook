@@ -62,7 +62,7 @@ if(!empty($userId)){
       <td class="align-middle"><img src="<?php echo $userImage?>" class="img-thumbnail imgList" style="width: 60px;"/></td>
       <td class="align-middle"><?php  echo $row['first_name']." ".$row['last_name'];?></td>
       <td class="align-middle"> 
-      <a href="/contactbook/view.php?id=9" class="btn btn-success">View</a>
+      <a href="<?php echo SITEURL."view.php?id=".$row['id'] ?>" class="btn btn-success">View</a>
       <a href="/contactbook/addcontact.php?id=9" class="btn btn-primary">Edit</a>
       <a href="/contactbook/delete.php?id=9" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
       </td>
