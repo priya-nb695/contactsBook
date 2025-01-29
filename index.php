@@ -64,7 +64,7 @@ if(!empty($userId)){
       <td class="align-middle"> 
       <a href="<?php echo SITEURL."view.php?id=".$row['id'] ?>" class="btn btn-success">View</a>
       <a href="<?php echo SITEURL."addcontact.php?id=".$row['id'] ?>" class="btn btn-primary">Edit</a>
-      <a href="<?php echo SITEURL."view.php?id=".$row['id'] ?>" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
+      <a href="<?php echo SITEURL."delete.php?id=".$row['id'] ?>" class="btn btn-danger" onclick="return confirm(`Are you sure want to delete this contact?`)">Delete</a>
       </td>
     </tr>
       
